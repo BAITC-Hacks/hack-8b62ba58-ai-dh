@@ -1,0 +1,78 @@
+# VS Code REST Client or copy the requests into Postman.
+@base = http://127.0.0.1:4000
+
+### Health
+GET {{base}}/api/health
+
+### Topics, fields, readiness levels
+GET {{base}}/api/meta
+
+### Public catalog, descending score
+GET {{base}}/api/tasks
+
+### Create draft
+# @name createTask
+POST {{base}}/api/tasks
+Content-Type: application/json
+X-Demo-Role: business
+
+{"draft":"Университет асханасындағы кезекті азайтқымыз келеді.","topic":"Қызмет көрсету"}
+
+@taskId = {{createTask.response.body.data.id}}
+
+### Generate questions; use latest revision in every write
+# @name clarify
+POST {{base}}/api/tasks/{{taskId}}/clarify
+Content-Type: application/json
+X-Demo-Role: business
+
+{"expectedRevision":{{createTask.response.body.data.revision}}}
+
+### Save answers, mapped by question.field
+# @name edit
+PATCH {{base}}/api/tasks/{{taskId}}
+Content-Type: application/json
+X-Demo-Role: business
+
+{"expectedRevision":{{clarify.response.body.data.revision}},"values":{"title":"Асханадағы кезек","need":"Күту уақытын қысқарту","users":"Студенттер","data":"50 синтетикалық тапсырыс","constraints":"3 апта","result":"Алдын ала тапсырыс прототипі","success":"Күту уақытын 20%-ға қысқарту","contact":"demo@example.com","interaction":"Аптасына бір кеңес"}}
+
+### User manually confirms
+# @name confirm
+POST {{base}}/api/tasks/{{taskId}}/confirm
+Content-Type: application/json
+X-Demo-Role: business
+
+{"expectedRevision":{{edit.response.body.data.revision}}}
+
+### User publishes
+POST {{base}}/api/tasks/{{taskId}}/publish
+Content-Type: application/json
+X-Demo-Role: business
+
+{"expectedRevision":{{confirm.response.body.data.revision}}}
+
+### Student sends offer
+# @name propose
+POST {{base}}/api/tasks/{{taskId}}/proposals
+Content-Type: application/json
+X-Demo-Role: student
+X-Team-Id: team-0
+
+{"idea":"Веб-қосымша","plan":"Зерттеу, прототип, тест","deadline":"2 апта","url":"https://example.com/prototype"}
+
+### Business selects a team
+PATCH {{base}}/api/proposals/{{propose.response.body.data.id}}
+Content-Type: application/json
+X-Demo-Role: business
+
+{"expectedRevision":{{propose.response.body.data.revision}},"status":"selected"}
+
+### Confirm delivered milestone; retry never adds points twice
+POST {{base}}/api/tasks/{{taskId}}/milestones/confirm
+Content-Type: application/json
+X-Demo-Role: business
+
+{"teamId":"team-0","stage":"prototype","evidence":"Бизнес прототипті қарап, кезеңді қабылдады."}
+
+### Points and profiles
+GET {{base}}/api/teams

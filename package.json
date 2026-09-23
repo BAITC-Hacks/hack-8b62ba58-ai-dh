@@ -1,0 +1,12 @@
+{
+  "name": "ai-sana-challenge-hub",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24.0.0" },
+  "scripts": {
+    "start": "node --env-file-if-exists=backend/.env backend/src/server.ts",
+    "dev": "node --env-file-if-exists=backend/.env --watch backend/src/server.ts",
+    "test": "node --test backend/tests/*.test.ts"
+  }
+}

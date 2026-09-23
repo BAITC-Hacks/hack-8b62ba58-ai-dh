@@ -1,0 +1,7 @@
+node_modules/
+backend/data/*
+!backend/data/.gitkeep
+backend/.env
+.env
+*.log
+Microsoft/

@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f6f7f2">
   <title>AI Sana Challenge Hub</title>
   <link rel="stylesheet" href="styles.css">
-  <script src="app.js" defer></script>
+  <script type="module" src="app.js"></script>
 </head>
 <body>
   <header class="topbar">
@@ -16,7 +16,7 @@
     </a>
     <nav class="top-actions" aria-label="Основная навигация">
       <a class="top-link" href="#catalog">Каталог <span aria-hidden="true">↗</span></a>
-      <button class="sign-in-button" id="open-auth" type="button">Войти <span aria-hidden="true">↗</span></button>
+      <button class="sign-in-button" id="open-auth" type="button">Режим: бизнес <span aria-hidden="true">↗</span></button>
     </nav>
   </header>
 
@@ -40,104 +40,51 @@
       <div class="hero-index">AI SANA <span>·</span> <span data-current-year></span></div>
     </section>
 
-    <section class="assistant-section" id="assistant" aria-labelledby="assistant-title">
+    <p id="connection-message" class="connection-message" role="status" aria-live="polite">Подключаемся к серверу…</p>
+    <section class="assistant-section business-section" id="assistant" aria-labelledby="assistant-title">
       <div class="assistant-heading">
         <p class="eyebrow"><span class="section-number">01</span> AI CHALLENGE ASSISTANT</p>
         <h2 id="assistant-title">Давайте разберём вашу задачу</h2>
-        <p>Опишите идею обычными словами. Помощник задаст несколько уточняющих вопросов, оценит готовность и соберёт черновик для каталога.</p>
+        <p>Опишите идею. Помощник задаст вопросы, а ваши ответы сохранятся в общем черновике. Перед публикацией вы проверите и подтвердите карточку.</p>
       </div>
       <div class="assistant-panel">
-        <div class="assistant-panel-head">
-          <div class="assistant-avatar" aria-hidden="true">✳</div>
-          <div><strong>Sana AI</strong><span>Помощник по бизнес-задачам</span></div>
-          <span class="assistant-demo-tag">ДЕМО</span>
-        </div>
-        <div class="chat-log" id="assistant-chat" role="log" aria-live="polite" aria-relevant="additions">
-          <div class="chat-message assistant-message"><span class="message-avatar" aria-hidden="true">✳</span><p>Привет! Помогу превратить бизнес-идею в понятную задачу для команд. Что вы хотите улучшить или решить?</p></div>
-        </div>
-        <div class="quick-prompts" id="quick-prompts" aria-label="Примеры задач">
-          <button type="button" class="prompt-chip">Снизить потери товаров</button>
-          <button type="button" class="prompt-chip">Ускорить обработку обращений</button>
-          <button type="button" class="prompt-chip">Оптимизировать доставку</button>
-        </div>
-        <form class="assistant-input-row" id="assistant-form">
-          <label class="sr-only" for="assistant-input">Ваш ответ помощнику</label>
-          <textarea id="assistant-input" rows="1" maxlength="1000" placeholder="Напишите сообщение…" required></textarea>
-          <button class="assistant-send" type="submit" aria-label="Отправить сообщение">↑</button>
-        </form>
-        <div class="assistant-progress" id="assistant-progress" hidden>
-          <div class="assistant-progress-top"><span id="progress-label">Уточняем задачу</span><span id="progress-count">1 из 4</span></div>
-          <div class="progress-track"><div class="progress-fill" id="assistant-progress-fill"></div></div>
-        </div>
-        <div class="assistant-result" id="assistant-result" hidden>
-          <div class="result-score"><strong id="readiness-score">0%</strong><span>предварительная<br>готовность задачи</span></div>
-          <div class="result-copy"><strong>Хорошая основа для вызова</strong><span id="readiness-summary">Ответы собраны. Проверьте черновик перед публикацией.</span></div>
-          <button class="button button-primary" id="use-assistant-draft" type="button">Собрать черновик <span aria-hidden="true">↓</span></button>
-          <button class="assistant-restart" id="restart-assistant" type="button">Начать новую задачу</button>
-        </div>
-        <p class="assistant-note">Демо-помощник работает на сценариях в браузере. Для генеративных AI-ответов нужен подключённый AI-сервис.</p>
+        <div class="assistant-panel-head"><div class="assistant-avatar" aria-hidden="true">✳</div><div><strong>Sana AI</strong><span>Помощник по бизнес-задачам</span></div><span class="assistant-demo-tag" id="ai-mode">ПОДКЛЮЧЕНИЕ</span></div>
+        <label class="field assistant-topic-field"><span>Направление задачи</span><select id="assistant-topic" aria-label="Направление задачи помощника" disabled></select></label>
+        <div class="chat-log" id="assistant-chat" role="log" aria-live="polite" aria-relevant="additions"></div>
+        <div class="quick-prompts" id="quick-prompts" aria-label="Примеры задач"><button type="button" class="prompt-chip">Снизить потери товаров</button><button type="button" class="prompt-chip">Ускорить обработку обращений</button><button type="button" class="prompt-chip">Оптимизировать доставку</button></div>
+        <form class="assistant-input-row" id="assistant-form"><label class="sr-only" for="assistant-input">Ваш ответ помощнику</label><textarea id="assistant-input" rows="1" maxlength="10000" placeholder="Напишите сообщение…" required></textarea><button class="assistant-send" type="submit" aria-label="Отправить сообщение">↑</button></form>
+        <div class="assistant-progress" id="assistant-progress" hidden><div class="assistant-progress-top"><span id="progress-label">Уточняем задачу</span><span id="progress-count"></span></div><div class="progress-track"><div class="progress-fill" id="assistant-progress-fill"></div></div></div>
+        <div class="assistant-result" id="assistant-result" hidden><div class="result-score"><strong id="readiness-score">0%</strong><span>подтверждённая<br>готовность задачи</span></div><div class="result-copy"><strong>Черновик сохранён на сервере</strong><span id="readiness-summary">Проверьте поля и подтвердите карточку. Рейтинг учитывает подтверждённые сведения.</span></div><button class="button button-primary" id="use-assistant-draft" type="button">Перейти к проверке <span aria-hidden="true">↓</span></button></div>
+        <p id="assistant-message" class="assistant-note" role="status" aria-live="polite"></p>
+        <p class="assistant-note" id="assistant-note">Проверяем режим помощника…</p>
       </div>
     </section>
 
-    <section class="submit-section" id="submit" aria-labelledby="submit-title">
-      <div class="section-heading">
-        <p class="eyebrow"><span class="section-number">02</span> ПРОВЕРКА И ПУБЛИКАЦИЯ</p>
-        <h2 id="submit-title">Ваш черновик задачи</h2>
-        <p>Помощник перенесёт сюда собранную информацию. Проверьте описание и выберите индустрию перед отправкой.</p>
-      </div>
+    <section class="submit-section business-section" id="submit" aria-labelledby="submit-title">
+      <div class="section-heading"><p class="eyebrow"><span class="section-number">02</span> ПРОВЕРКА И ПУБЛИКАЦИЯ</p><h2 id="submit-title">Ваш черновик задачи</h2><p>Заполняйте только известные сведения. Сохранение оставляет задачу в черновиках. После проверки подтвердите карточку и отдельно опубликуйте её.</p><div class="editor-status" id="editor-status">Новый черновик</div><button class="text-action" type="button" id="new-draft">Начать новую задачу</button></div>
       <form class="task-form" id="task-form">
-        <div class="form-topline"><span>НОВАЯ ЗАДАЧА</span><span class="required-note">* Обязательные поля</span></div>
-        <label class="field"><span>Название задачи <b>*</b></span><input name="title" type="text" placeholder="Например, прогнозировать спрос" required maxlength="120"></label>
-        <label class="field"><span>Коротко о задаче <b>*</b></span><textarea name="description" placeholder="Что происходит сейчас и какой результат вы хотите получить?" rows="4" required maxlength="2000"></textarea><small>Можно добавить детали позже</small></label>
-        <label class="field"><span>Категория / индустрия <b>*</b></span>
-          <select name="category" required>
-            <option value="" disabled selected>Выберите направление</option>
-            <option value="Финансы">Финансы</option><option value="Ритейл">Ритейл</option><option value="Здравоохранение">Здравоохранение</option><option value="Образование">Образование</option><option value="Логистика">Логистика</option><option value="Производство">Производство</option><option value="Другое">Другое</option>
-          </select>
-        </label>
-        <div class="form-footer"><span class="form-footnote"><span class="footnote-star">✳</span> Мы поможем превратить задачу в понятный вызов</span><button class="button button-primary" type="submit">Отправить задачу <span aria-hidden="true">↗</span></button></div>
+        <fieldset id="editor-fields">
+          <div class="form-topline"><span>КАРТОЧКА ЗАДАЧИ</span><span class="required-note">* Нужно для публикации</span></div>
+          <label class="field"><span>Исходное описание <b>*</b></span><textarea name="draft" rows="3" maxlength="10000" placeholder="Что вы хотите улучшить или решить?"></textarea></label>
+          <label class="field"><span>Категория / индустрия <b>*</b></span><select name="topic" id="editor-topic" disabled></select></label>
+          <div id="value-fields"></div>
+          <div class="editor-actions"><button class="button button-secondary" type="submit" id="save-draft">Сохранить черновик</button><button class="button button-secondary" type="button" id="clarify-draft">Уточнить с AI</button><button class="button button-secondary" type="button" id="confirm-draft">Подтвердить карточку</button><button class="button button-primary" type="button" id="publish-draft" disabled>Опубликовать <span aria-hidden="true">↗</span></button></div>
+        </fieldset>
         <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
+        <div id="conflict-panel" class="conflict-panel" hidden></div>
+        <button class="text-action" id="reload-draft" type="button" hidden>Загрузить актуальную версию, сохранив мой ввод</button>
       </form>
     </section>
 
-    <section class="catalog-section" id="catalog" aria-labelledby="catalog-title">
-      <div class="catalog-heading">
-        <div class="section-heading">
-          <p class="eyebrow"><span class="section-number">03</span> ДЛЯ КОМАНД</p>
-          <h2 id="catalog-title">Каталог задач</h2>
-          <p>Выберите вызов, который вдохновляет вас на решение.</p>
-        </div>
-        <div class="catalog-count" id="catalog-count"><span class="count-dot"></span><span>Загружаем задачи…</span></div>
-      </div>
-      <div class="task-grid" id="task-list" aria-live="polite">
-        <div class="catalog-state">Подключаемся к каталогу<span class="loading-dot"> · · ·</span></div>
-      </div>
-      <p class="catalog-message" id="catalog-message" role="status" aria-live="polite"></p>
-    </section>
-  </main>
+    <section class="workspace-section business-section" id="workspace" aria-labelledby="workspace-title"><div class="catalog-heading"><div class="section-heading"><p class="eyebrow">ВАШЕ ПРОСТРАНСТВО</p><h2 id="workspace-title">Рабочие задачи</h2><p>В демо-режиме бизнесу доступны все общие черновики. Неопубликованные изменения видны только здесь.</p></div><button class="text-action" id="refresh-workspace" type="button">Обновить список ↻</button></div><div id="draft-list" class="draft-grid"></div><p id="workspace-message" role="status" class="form-message"></p></section>
 
+    <section class="catalog-section" id="catalog" aria-labelledby="catalog-title"><div class="catalog-heading"><div class="section-heading"><p class="eyebrow"><span class="section-number">03</span> ДЛЯ КОМАНД</p><h2 id="catalog-title">Каталог задач</h2><p>Выберите вызов, который вдохновляет вас на решение.</p></div><div class="catalog-count" id="catalog-count"><span class="count-dot"></span><span>Загружаем задачи…</span></div></div><div class="catalog-filters"><label class="field"><span>Направление</span><select id="filter-topic" disabled><option value="">Все направления</option></select></label><label class="field"><span>Готовность</span><select id="filter-level" disabled><option value="">Все уровни</option></select></label><button class="text-action" type="button" id="refresh-catalog">Обновить ↻</button></div><div class="task-grid" id="task-list" aria-live="polite"><div class="catalog-state">Подключаемся к каталогу…</div></div><p class="catalog-message" id="catalog-message" role="status" aria-live="polite"></p></section>
+
+    <section class="teams-section" id="teams" aria-labelledby="teams-title"><div class="section-heading"><p class="eyebrow">КОМАНДЫ И РЕЗУЛЬТАТЫ</p><h2 id="teams-title">Рейтинг команд</h2><p>Команды получают по 25 баллов за подтверждённый прототип и пилот. Повторное подтверждение этапа не добавляет баллы.</p></div><div id="team-list" class="team-grid"></div><p id="teams-message" class="form-message" role="status"></p></section>
+  </main>
   <footer class="footer"><a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true">✳</span><span>AI Sana <span class="brand-light">Challenge Hub</span></span></a><span>Создаём будущее вместе</span><span class="footer-year">Казахстан · <span data-current-year></span></span></footer>
 
-  <div class="auth-overlay" id="auth-overlay" hidden>
-    <section class="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
-      <button class="auth-close" id="close-auth" type="button" aria-label="Закрыть">×</button>
-      <div class="auth-brand"><span class="brand-mark" aria-hidden="true">✳</span> AI Sana</div>
-      <p class="eyebrow auth-eyebrow"><span class="eyebrow-dot"></span> ВАШЕ ПРОСТРАНСТВО</p>
-      <h2 id="auth-title">С возвращением</h2>
-      <p class="auth-intro" id="auth-intro">Войдите, чтобы следить за задачами и откликами.</p>
-      <form id="login-form" class="auth-form">
-        <label class="field registration-field" id="name-field" hidden><span>Имя и фамилия <b>*</b></span><input name="name" type="text" placeholder="Как к вам обращаться" autocomplete="name" minlength="2"></label>
-        <label class="field"><span>Электронная почта <b>*</b></span><input name="email" type="email" placeholder="name@company.kz" autocomplete="email" required></label>
-        <label class="field password-field" id="password-field"><span>Пароль <b>*</b></span><span class="password-control"><input name="password" type="password" placeholder="Введите пароль" autocomplete="current-password" required minlength="8"><button id="toggle-password" class="password-toggle" type="button" aria-label="Показать пароль">Показать</button></span></label>
-        <label class="field registration-field" id="confirm-password-field" hidden><span>Повторите пароль <b>*</b></span><input name="confirmPassword" type="password" placeholder="Введите пароль ещё раз" autocomplete="new-password" minlength="8"></label>
-        <button class="forgot-link" id="forgot-password" type="button">Забыли пароль?</button>
-        <button class="button button-primary auth-submit" type="submit" id="auth-submit">Войти <span aria-hidden="true">↗</span></button>
-        <p class="auth-message" id="auth-message" role="status" aria-live="polite"></p>
-      </form>
-      <button class="back-to-login" id="back-to-login" type="button" hidden>← Вернуться ко входу</button>
-      <p class="auth-footnote"><span id="auth-footnote-copy">Нет аккаунта?</span> <button class="auth-mode-switch" id="switch-auth-mode" type="button">Зарегистрироваться</button></p>
-      <p class="auth-storage-note">Демо-профиль хранится только в этом браузере. Для общего доступа нужен сервер авторизации.</p>
-    </section>
-  </div>
+  <dialog id="mode-dialog" class="hub-dialog mode-dialog" aria-labelledby="mode-title"><button class="auth-close" id="close-mode" type="button" aria-label="Закрыть выбор режима">×</button><div class="auth-brand"><span class="brand-mark" aria-hidden="true">✳</span> AI Sana</div><h2 id="mode-title">Выберите режим</h2><p class="auth-intro">Это общий демонстрационный проект. Выбор роли не является входом в защищённый аккаунт.</p><form id="mode-form"><label class="field"><span>Я участвую как</span><select name="role"><option value="business">Бизнес — создаю задачи</option><option value="student">Команда — предлагаю решения</option></select></label><label class="field" id="team-choice" hidden><span>Моя команда</span><select name="teamId"></select></label><button class="button button-primary" type="submit">Продолжить <span aria-hidden="true">↗</span></button><p id="mode-message" class="form-message" role="status"></p></form><p class="auth-storage-note">В браузере сохраняется только выбранный режим. Задачи, предложения и баллы хранятся на сервере.</p></dialog>
+  <dialog id="task-dialog" class="hub-dialog task-dialog" aria-labelledby="detail-title"><button class="auth-close" id="close-detail" type="button" aria-label="Закрыть задачу">×</button><div id="detail-content"></div><p id="detail-message" class="form-message" role="status" aria-live="polite"></p><button id="reload-detail" type="button" class="text-action" hidden>Обновить предложения, сохранив мой ввод</button></dialog>
 </body>
 </html>
