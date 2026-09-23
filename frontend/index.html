@@ -26,7 +26,7 @@
         <p class="eyebrow"><span class="eyebrow-dot"></span> ИДЕИ, КОТОРЫЕ СТАНОВЯТСЯ ПРОЕКТАМИ</p>
         <h1 id="hero-title">Большие задачи.<br><span>Умные решения.</span></h1>
         <p class="hero-description">Опишите бизнес-вызов — мы поможем уточнить задачу и найти команду, которая воплотит идею в жизнь.</p>
-        <a class="hero-cta" href="#submit">Предложить задачу <span aria-hidden="true">↓</span></a>
+        <a class="hero-cta" href="#assistant">Начать с AI-помощником <span aria-hidden="true">↓</span></a>
         <div class="hero-note"><span class="note-line"></span> От идеи до AI-решения — вместе</div>
       </div>
       <div class="hero-art" aria-hidden="true">
@@ -37,14 +37,53 @@
         <span class="art-star star-one">✳</span><span class="art-star star-two">✦</span>
         <span class="art-label">01 / DISCOVER</span>
       </div>
-      <div class="hero-index">AI SANA <span>·</span> 2025</div>
+      <div class="hero-index">AI SANA <span>·</span> <span data-current-year></span></div>
+    </section>
+
+    <section class="assistant-section" id="assistant" aria-labelledby="assistant-title">
+      <div class="assistant-heading">
+        <p class="eyebrow"><span class="section-number">01</span> AI CHALLENGE ASSISTANT</p>
+        <h2 id="assistant-title">Давайте разберём вашу задачу</h2>
+        <p>Опишите идею обычными словами. Помощник задаст несколько уточняющих вопросов, оценит готовность и соберёт черновик для каталога.</p>
+      </div>
+      <div class="assistant-panel">
+        <div class="assistant-panel-head">
+          <div class="assistant-avatar" aria-hidden="true">✳</div>
+          <div><strong>Sana AI</strong><span>Помощник по бизнес-задачам</span></div>
+          <span class="assistant-demo-tag">ДЕМО</span>
+        </div>
+        <div class="chat-log" id="assistant-chat" role="log" aria-live="polite" aria-relevant="additions">
+          <div class="chat-message assistant-message"><span class="message-avatar" aria-hidden="true">✳</span><p>Привет! Помогу превратить бизнес-идею в понятную задачу для команд. Что вы хотите улучшить или решить?</p></div>
+        </div>
+        <div class="quick-prompts" id="quick-prompts" aria-label="Примеры задач">
+          <button type="button" class="prompt-chip">Снизить потери товаров</button>
+          <button type="button" class="prompt-chip">Ускорить обработку обращений</button>
+          <button type="button" class="prompt-chip">Оптимизировать доставку</button>
+        </div>
+        <form class="assistant-input-row" id="assistant-form">
+          <label class="sr-only" for="assistant-input">Ваш ответ помощнику</label>
+          <textarea id="assistant-input" rows="1" maxlength="1000" placeholder="Напишите сообщение…" required></textarea>
+          <button class="assistant-send" type="submit" aria-label="Отправить сообщение">↑</button>
+        </form>
+        <div class="assistant-progress" id="assistant-progress" hidden>
+          <div class="assistant-progress-top"><span id="progress-label">Уточняем задачу</span><span id="progress-count">1 из 4</span></div>
+          <div class="progress-track"><div class="progress-fill" id="assistant-progress-fill"></div></div>
+        </div>
+        <div class="assistant-result" id="assistant-result" hidden>
+          <div class="result-score"><strong id="readiness-score">0%</strong><span>предварительная<br>готовность задачи</span></div>
+          <div class="result-copy"><strong>Хорошая основа для вызова</strong><span id="readiness-summary">Ответы собраны. Проверьте черновик перед публикацией.</span></div>
+          <button class="button button-primary" id="use-assistant-draft" type="button">Собрать черновик <span aria-hidden="true">↓</span></button>
+          <button class="assistant-restart" id="restart-assistant" type="button">Начать новую задачу</button>
+        </div>
+        <p class="assistant-note">Демо-помощник работает на сценариях в браузере. Для генеративных AI-ответов нужен подключённый AI-сервис.</p>
+      </div>
     </section>
 
     <section class="submit-section" id="submit" aria-labelledby="submit-title">
       <div class="section-heading">
-        <p class="eyebrow"><span class="section-number">01</span> ДЛЯ БИЗНЕСА</p>
-        <h2 id="submit-title">Расскажите о задаче</h2>
-        <p>Не нужен идеальный бриф. Начните с того, что важно решить.</p>
+        <p class="eyebrow"><span class="section-number">02</span> ПРОВЕРКА И ПУБЛИКАЦИЯ</p>
+        <h2 id="submit-title">Ваш черновик задачи</h2>
+        <p>Помощник перенесёт сюда собранную информацию. Проверьте описание и выберите индустрию перед отправкой.</p>
       </div>
       <form class="task-form" id="task-form">
         <div class="form-topline"><span>НОВАЯ ЗАДАЧА</span><span class="required-note">* Обязательные поля</span></div>
@@ -64,7 +103,7 @@
     <section class="catalog-section" id="catalog" aria-labelledby="catalog-title">
       <div class="catalog-heading">
         <div class="section-heading">
-          <p class="eyebrow"><span class="section-number">02</span> ДЛЯ КОМАНД</p>
+          <p class="eyebrow"><span class="section-number">03</span> ДЛЯ КОМАНД</p>
           <h2 id="catalog-title">Каталог задач</h2>
           <p>Выберите вызов, который вдохновляет вас на решение.</p>
         </div>
@@ -77,7 +116,7 @@
     </section>
   </main>
 
-  <footer class="footer"><a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true">✳</span><span>AI Sana <span class="brand-light">Challenge Hub</span></span></a><span>Создаём будущее вместе</span><span class="footer-year">Казахстан · 2025</span></footer>
+  <footer class="footer"><a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true">✳</span><span>AI Sana <span class="brand-light">Challenge Hub</span></span></a><span>Создаём будущее вместе</span><span class="footer-year">Казахстан · <span data-current-year></span></span></footer>
 
   <div class="auth-overlay" id="auth-overlay" hidden>
     <section class="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">

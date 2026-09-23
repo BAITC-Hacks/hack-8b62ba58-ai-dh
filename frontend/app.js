@@ -14,6 +14,7 @@ const taskList = document.querySelector('#task-list');
 const formMessage = document.querySelector('#form-message');
 const catalogMessage = document.querySelector('#catalog-message');
 const catalogCount = document.querySelector('#catalog-count span:last-child');
+let assistantReadiness = 0;
 
 function readLocalTasks() {
   try {
@@ -245,6 +246,7 @@ taskForm.addEventListener('submit', async (event) => {
     title: String(formData.get('title')).trim(),
     description: String(formData.get('description')).trim(),
     category: String(formData.get('category')).trim(),
+    readiness: Number(taskForm.dataset.readiness || 0),
   };
 
   if (Object.values(task).some((value) => !value)) {
@@ -263,14 +265,16 @@ taskForm.addEventListener('submit', async (event) => {
     });
     await parseResponse(response);
     taskForm.reset();
+    delete taskForm.dataset.readiness;
     setMessage(formMessage, 'Задача отправлена. Спасибо — она скоро появится в каталоге.', 'success');
     await loadTasks();
   } catch (error) {
     const savedTasks = readLocalTasks();
-    const localTask = { ...task, id: `local-${Date.now()}`, readiness: 0 };
+    const localTask = { ...task, id: `local-${Date.now()}` };
     savedTasks.unshift(localTask);
     if (writeLocalTasks(savedTasks)) {
       taskForm.reset();
+      delete taskForm.dataset.readiness;
       setMessage(formMessage, 'API недоступно. Задача сохранена в демо-режиме только в этом браузере.', 'success');
       renderTasks(savedTasks);
       showDemoNotice(`API ответило ошибкой (${error.message}). Новая задача сохранена только в этом браузере.`);
@@ -479,5 +483,161 @@ loginForm.addEventListener('submit', async (event) => {
   }
 });
 
+const assistantForm = document.querySelector('#assistant-form');
+const assistantInput = document.querySelector('#assistant-input');
+const assistantChat = document.querySelector('#assistant-chat');
+const assistantProgress = document.querySelector('#assistant-progress');
+const assistantProgressFill = document.querySelector('#assistant-progress-fill');
+const assistantProgressCount = document.querySelector('#progress-count');
+const assistantResult = document.querySelector('#assistant-result');
+const assistantPrompts = document.querySelector('#quick-prompts');
+const assistantQuestions = [
+  { key: 'current', question: 'Как сейчас решается эта задача и что именно не работает или отнимает больше всего времени?' },
+  { key: 'outcome', question: 'Какой результат вы хотите получить? По какому показателю поймёте, что решение сработало?' },
+  { key: 'data', question: 'Какие данные или инструменты уже есть у команды? Например, история продаж, обращения клиентов или данные датчиков.' },
+  { key: 'constraints', question: 'Есть ли ограничения по срокам, бюджету, безопасности или системам, с которыми нужно работать?' },
+];
+let assistantBrief = '';
+let assistantAnswers = {};
+let assistantQuestionIndex = -1;
+let assistantComplete = false;
+
+function addChatMessage(message, role = 'assistant') {
+  const item = document.createElement('div');
+  item.className = `chat-message ${role === 'user' ? 'user-message' : 'assistant-message'}`;
+  if (role !== 'user') {
+    const avatar = document.createElement('span');
+    avatar.className = 'message-avatar';
+    avatar.setAttribute('aria-hidden', 'true');
+    avatar.textContent = '✳';
+    item.append(avatar);
+  }
+  const bubble = document.createElement('p');
+  bubble.textContent = message;
+  item.append(bubble);
+  assistantChat.append(item);
+  assistantChat.scrollTop = assistantChat.scrollHeight;
+}
+
+function askAssistantQuestion(index) {
+  assistantQuestionIndex = index;
+  assistantProgress.hidden = false;
+  document.querySelector('#progress-label').textContent = 'Уточняем задачу';
+  assistantProgressCount.textContent = `${index + 1} из ${assistantQuestions.length}`;
+  assistantProgressFill.style.width = `${((index + 1) / assistantQuestions.length) * 100}%`;
+  addChatMessage(assistantQuestions[index].question);
+}
+
+function finishAssistantInterview() {
+  assistantComplete = true;
+  assistantProgress.hidden = true;
+  assistantPrompts.hidden = true;
+  assistantInput.disabled = true;
+  assistantForm.querySelector('button[type="submit"]').disabled = true;
+
+  const answers = Object.values(assistantAnswers);
+  const detailedAnswers = answers.filter((answer) => answer.length >= 45 || /\d/.test(answer)).length;
+  assistantReadiness = Math.min(100, 20 + answers.length * 15 + detailedAnswers * 5 + (assistantBrief.length >= 70 ? 5 : 0));
+  document.querySelector('#readiness-score').textContent = `${assistantReadiness}%`;
+  document.querySelector('#readiness-summary').textContent = assistantReadiness >= 90
+    ? 'Есть контекст, цель и ограничения. Проверьте черновик и отправьте его в каталог.'
+    : 'Основные детали собраны. Проверьте черновик и при желании дополните его перед публикацией.';
+  assistantResult.hidden = false;
+  addChatMessage(`Спасибо, теперь задача описана гораздо яснее. Предварительная готовность — ${assistantReadiness}%. Я собрал черновик; перед публикацией его можно отредактировать.`);
+}
+
+function sendAssistantMessage(message) {
+  const answer = message.trim();
+  if (!answer || assistantComplete) return;
+  addChatMessage(answer, 'user');
+  assistantInput.value = '';
+  assistantInput.style.height = 'auto';
+
+  if (!assistantBrief) {
+    assistantBrief = answer;
+    assistantPrompts.hidden = true;
+    askAssistantQuestion(0);
+    return;
+  }
+
+  const currentQuestion = assistantQuestions[assistantQuestionIndex];
+  assistantAnswers[currentQuestion.key] = answer;
+  if (assistantQuestionIndex + 1 < assistantQuestions.length) {
+    askAssistantQuestion(assistantQuestionIndex + 1);
+  } else {
+    finishAssistantInterview();
+  }
+}
+
+assistantForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  sendAssistantMessage(assistantInput.value);
+});
+
+assistantInput.addEventListener('input', () => {
+  assistantInput.style.height = 'auto';
+  assistantInput.style.height = `${Math.min(assistantInput.scrollHeight, 105)}px`;
+});
+
+assistantInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    assistantForm.requestSubmit();
+  }
+});
+
+assistantPrompts.addEventListener('click', (event) => {
+  const prompt = event.target.closest('.prompt-chip');
+  if (prompt) sendAssistantMessage(prompt.textContent);
+});
+
+document.querySelector('#use-assistant-draft').addEventListener('click', () => {
+  const title = assistantBrief.length > 120 ? `${assistantBrief.slice(0, 117).trimEnd()}…` : assistantBrief;
+  const answerLabels = {
+    current: 'Текущий процесс и проблема',
+    outcome: 'Желаемый результат и критерий успеха',
+    data: 'Данные и инструменты',
+    constraints: 'Ограничения',
+  };
+  const description = [assistantBrief, ...assistantQuestions.map(({ key }) => `${answerLabels[key]}: ${assistantAnswers[key]}`)].join('\n\n');
+  taskForm.elements.title.value = title;
+  taskForm.elements.description.value = description.slice(0, 2000);
+  taskForm.dataset.readiness = String(assistantReadiness);
+
+  const categoryPatterns = [
+    [/финанс|банк|кредит|плат[её]ж/i, 'Финансы'],
+    [/магазин|розниц|товар|продаж|склад/i, 'Ритейл'],
+    [/здоров|медицин|клиник|пациент/i, 'Здравоохранение'],
+    [/обуч|образован|студент|школ/i, 'Образование'],
+    [/достав|маршрут|логист|транспорт/i, 'Логистика'],
+    [/производств|завод|оборудован|станок/i, 'Производство'],
+  ];
+  const categoryOption = categoryPatterns.find(([pattern]) => pattern.test(`${assistantBrief} ${description}`));
+  taskForm.elements.category.value = categoryOption?.[1] || '';
+  setMessage(formMessage, 'Черновик собран помощником. Проверьте текст и индустрию перед отправкой.', 'info');
+  document.querySelector('#submit').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+document.querySelector('#restart-assistant').addEventListener('click', () => {
+  assistantBrief = '';
+  assistantAnswers = {};
+  assistantQuestionIndex = -1;
+  assistantComplete = false;
+  assistantReadiness = 0;
+  delete taskForm.dataset.readiness;
+  assistantChat.replaceChildren();
+  assistantInput.value = '';
+  assistantInput.disabled = false;
+  assistantForm.querySelector('button[type="submit"]').disabled = false;
+  assistantProgress.hidden = true;
+  assistantResult.hidden = true;
+  assistantPrompts.hidden = false;
+  addChatMessage('Привет! Помогу превратить бизнес-идею в понятную задачу для команд. Что вы хотите улучшить или решить?');
+  assistantInput.focus();
+});
+
 updateAuthButton();
+document.querySelectorAll('[data-current-year]').forEach((element) => {
+  element.textContent = String(new Date().getFullYear());
+});
 loadTasks();
