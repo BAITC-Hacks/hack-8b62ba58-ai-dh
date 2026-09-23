@@ -109,6 +109,14 @@ function syncEditor() {
   $('#publish-draft').disabled = !state.ready || state.editorBusy || hasConflicts || !task || dirty || task.confirmedRevision !== task.revision;
   $('#assistant-topic').disabled = !state.ready || state.editorBusy || Boolean(task);
   $('#readiness-score').textContent = `${task?.rating.score || 0}%`;
+  $('#ai-assessment').hidden = !task?.assessment;
+  if (task?.assessment) {
+    $('#ai-difficulty').textContent = `Сложность: ${task.assessment.difficulty} из 10`;
+    $('#ai-feedback').textContent = task.assessment.feedback;
+    $('#ai-assessment-note').textContent = task.assessment.stale || dirty
+      ? 'Карточка изменилась после оценки. Для новой оценки нажмите «Уточнить с AI».'
+      : 'Предварительная оценка AI. Она не влияет на процент готовности или возможность публикации.';
+  }
   const assistantDisabled = !state.ready || state.editorBusy || hasConflicts || state.assistant.phase === 'done';
   assistantInput.disabled = assistantDisabled;
   $('#assistant-form button').disabled = assistantDisabled;
@@ -515,6 +523,12 @@ function renderDetail() {
   content.replaceChildren();
   const heading = element('h2', '', taskTitle(task)); heading.id = 'detail-title';
   content.append(element('span', 'category-tag', topicLabels[task.topic] || task.topic), heading, readinessMeter(task));
+  if (task.assessment) {
+    const assessment = element('section', 'ai-assessment detail-assessment');
+    assessment.append(element('strong', '', `Сложность: ${task.assessment.difficulty} из 10`), element('p', '', task.assessment.feedback),
+      element('small', '', task.assessment.stale ? 'Карточка изменилась после этой оценки AI.' : 'Предварительная оценка AI, отдельная от готовности карточки.'));
+    content.append(assessment);
+  }
   if (state.actor.role === 'business') content.append(element('p', 'detail-note', 'Показана рабочая версия. В каталоге доступна последняя опубликованная карточка.'));
   const data = element('dl', 'detail-fields');
   for (const [key, label] of Object.entries(fieldLabels)) data.append(detailField(label, task.values[key]));
@@ -646,9 +660,9 @@ async function initialize() {
     setOptions($('#filter-topic'), meta.data.topics, topicLabels, 'Все направления');
     setOptions($('#filter-level'), meta.data.levels, levelLabels, 'Все уровни');
     state.ready = true;
-    $('#ai-mode').textContent = health.data.aiMode === 'provider' ? 'AI ПОДКЛЮЧЁН' : 'ДЕМО AI';
+    $('#ai-mode').textContent = health.data.aiMode === 'provider' ? (health.data.aiProvider === 'openai' ? 'OPENAI' : 'AI') : 'ДЕМО AI';
     $('#assistant-note').textContent = health.data.aiMode === 'provider'
-      ? 'Помощник подключён к AI-сервису. Проверьте предложенные сведения перед подтверждением.'
+      ? 'Описание и поля задачи отправляются в AI-сервис при уточнении. Помощник задаёт 3 вопроса и оценивает сложность. Проверьте ответ перед подтверждением.'
       : 'Серверный демо-помощник задаёт вопросы по незаполненным полям. Генеративный AI-сервис не подключён.';
     await loadTeams();
     applyRole();

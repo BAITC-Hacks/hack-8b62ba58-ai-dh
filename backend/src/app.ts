@@ -7,7 +7,7 @@ import { analyze, breakdown, confirmTask, editField, emptyValues, fields, level,
 import { transaction, working, type TaskRow, type ProposalRow } from './database.ts';
 import { ApiError, check, object, only, text } from './errors.ts';
 
-export type Options = { origins?: string[]; staticDir?: string; aiProvider?: (draft: string, values: Values) => Promise<string> };
+export type Options = { origins?: string[]; staticDir?: string; aiName?: string; aiModel?: string; aiProvider?: (draft: string, values: Values) => Promise<string> };
 const publicFiles = new Map([
   ['/', { name: 'index.html', type: 'text/html; charset=utf-8' }],
   ['/index.html', { name: 'index.html', type: 'text/html; charset=utf-8' }],
@@ -83,7 +83,7 @@ export function createApp(db: DatabaseSync, options: Options = {}) {
         res.writeHead(200, { 'Content-Type': file.type, 'Content-Length': content.length });
         res.end(method === 'HEAD' ? undefined : content); return;
       }
-      if (method === 'GET' && path === '/api/health') { db.prepare('SELECT 1').get(); reply(200, { data: { status: 'ok', service: 'ai-sana-backend', aiMode: options.aiProvider ? 'provider' : 'demo', authMode: 'demo-headers' } }); return; }
+      if (method === 'GET' && path === '/api/health') { db.prepare('SELECT 1').get(); reply(200, { data: { status: 'ok', service: 'ai-sana-backend', aiMode: options.aiProvider ? 'provider' : 'demo', aiProvider: options.aiName || (options.aiProvider ? 'custom' : 'demo'), aiModel: options.aiModel || null, authMode: 'demo-headers' } }); return; }
       if (method === 'GET' && path === '/api/meta') { reply(200, { data: { fields, topics, levels, aiMode: options.aiProvider ? 'provider' : 'demo', stages: [{ id: 'prototype', points: 25 }, { id: 'pilot', points: 25 }] } }); return; }
       if (method === 'GET' && path === '/api/teams') {
         reply(200, { data: db.prepare('SELECT teams.*, COALESCE(SUM(milestones.points),0) AS points FROM teams LEFT JOIN milestones ON teams.id = milestones.team_id GROUP BY teams.id ORDER BY teams.name').all() }); return;
@@ -146,18 +146,22 @@ export function createApp(db: DatabaseSync, options: Options = {}) {
           if (action === 'clarify') {
             revision(b, row(db, id).revision); const current = working(row(db, id));
             try { ai = await analyze(current.draft, current.values, options.aiProvider); }
-            catch { throw new ApiError(502, 'AI_INVALID_RESPONSE', 'Көмекші жауабы жарамсыз немесе қолжетімсіз. Черновик сақталды; қайта көріңіз немесе қолмен өңдеңіз.'); }
+            catch (error) { if (error instanceof ApiError) throw error; throw new ApiError(502, 'AI_INVALID_RESPONSE', 'Көмекші жауабы жарамсыз немесе қолжетімсіз. Черновик сақталды; қайта көріңіз немесе қолмен өңдеңіз.'); }
           }
           const result = transaction(db, () => {
             const current = row(db, id); revision(b, current.revision); let t = working(current);
             let confirmedRevision: number | null = null; let publicSnapshot = current.public_snapshot;
             if (method === 'PATCH') {
+              const before = JSON.stringify({ draft: t.draft, topic: t.topic, values: t.values });
               check(['values', 'topic', 'draft'].some(k => k in b), 400, 'VALIDATION_ERROR', 'Кемінде бір өзгеріс қажет.');
               if ('values' in b) { const values = object(b.values); only(values, Object.keys(fields)); for (const k of Object.keys(values) as Field[]) { const value = text(values[k], k, k === 'title' ? 200 : 10000, false); if (value !== t.values[k]) t = editField(t, k, value); } }
               if ('draft' in b) t.draft = text(b.draft, 'draft');
               if ('topic' in b) { t.topic = text(b.topic, 'topic', 100); check(topics.includes(t.topic), 400, 'VALIDATION_ERROR', 'Белгісіз тақырып.'); }
+              if (t.assessment && before !== JSON.stringify({ draft: t.draft, topic: t.topic, values: t.values })) t.assessment.stale = true;
             } else if (action === 'clarify') {
               for (const k of Object.keys(fields) as Field[]) if (ai!.fields[k] !== t.values[k]) t = editField(t, k, ai!.fields[k]);
+              if (ai!.assessment) t.assessment = ai!.assessment;
+              else delete t.assessment;
             } else if (action === 'confirm') {
               check(t.values.title.trim(), 400, 'TITLE_REQUIRED', 'Тапсырма атауын енгізіңіз.'); t = confirmTask(t); confirmedRevision = current.revision + 1;
             } else if (action === 'publish') {
@@ -166,7 +170,7 @@ export function createApp(db: DatabaseSync, options: Options = {}) {
             }
             db.prepare('UPDATE tasks SET working = ?, public_snapshot = ?, revision = revision + 1, confirmed_revision = ? WHERE id = ?').run(JSON.stringify(t), publicSnapshot, confirmedRevision, id);
             return serialize(row(db, id));
-          }); reply(200, { data: result, ...(ai ? { ai: { mode: options.aiProvider ? 'provider' : 'demo', questions: ai.questions } } : {}) }); return;
+          }); reply(200, { data: result, ...(ai ? { ai: { mode: options.aiProvider ? 'provider' : 'demo', questions: ai.questions, ...(ai.assessment ? { assessment: ai.assessment } : {}) } } : {}) }); return;
         }
       }
       const pm = path.match(/^\/api\/proposals\/([^/]+)$/);

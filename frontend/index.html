@@ -55,6 +55,7 @@
         <form class="assistant-input-row" id="assistant-form"><label class="sr-only" for="assistant-input">Ваш ответ помощнику</label><textarea id="assistant-input" rows="1" maxlength="10000" placeholder="Напишите сообщение…" required></textarea><button class="assistant-send" type="submit" aria-label="Отправить сообщение">↑</button></form>
         <div class="assistant-progress" id="assistant-progress" hidden><div class="assistant-progress-top"><span id="progress-label">Уточняем задачу</span><span id="progress-count"></span></div><div class="progress-track"><div class="progress-fill" id="assistant-progress-fill"></div></div></div>
         <div class="assistant-result" id="assistant-result" hidden><div class="result-score"><strong id="readiness-score">0%</strong><span>подтверждённая<br>готовность задачи</span></div><div class="result-copy"><strong>Черновик сохранён на сервере</strong><span id="readiness-summary">Проверьте поля и подтвердите карточку. Рейтинг учитывает подтверждённые сведения.</span></div><button class="button button-primary" id="use-assistant-draft" type="button">Перейти к проверке <span aria-hidden="true">↓</span></button></div>
+        <div id="ai-assessment" class="ai-assessment" hidden aria-live="polite"><strong id="ai-difficulty"></strong><p id="ai-feedback"></p><small id="ai-assessment-note"></small></div>
         <p id="assistant-message" class="assistant-note" role="status" aria-live="polite"></p>
         <p class="assistant-note" id="assistant-note">Проверяем режим помощника…</p>
       </div>

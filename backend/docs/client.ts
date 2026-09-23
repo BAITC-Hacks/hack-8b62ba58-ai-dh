@@ -4,6 +4,7 @@ export type TaskValues = Record<'title'|'context'|'need'|'users'|'data'|'constra
 export type TaskView = {
   id: string; topic: string; draft: string; values: TaskValues; published: boolean;
   revision?: number; confirmedRevision?: number | null; hasPublishedVersion: boolean;
+  assessment?: {difficulty:number;feedback:string;stale?:boolean};
   rating: {score:number; level:string; breakdown:{label:string;weight:number;earned:number;keys:string[]}[];missing:{label:string;points:number;fields:string[]}[]};
 };
 export type Proposal = {id:string;taskId:string;teamId:string;idea:string;plan:string;deadline:string;url:string;status:'pending'|'selected'|'rejected';revision:number;completed:string[]};

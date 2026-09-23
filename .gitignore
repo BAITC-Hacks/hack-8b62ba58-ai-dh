@@ -3,5 +3,8 @@ backend/data/*
 !backend/data/.gitkeep
 backend/.env
 .env
+*.env
+.env.*
+!.env.example
 *.log
 Microsoft/

@@ -4,7 +4,8 @@ export const fields = {
 } as const;
 export type Field = keyof typeof fields;
 export type Values = Record<Field, string>;
-export type Task = { id: string; topic: string; draft: string; values: Values; confirmed: Partial<Values>; published: boolean; createdAt: string };
+export type Assessment = { difficulty: number; feedback: string; stale?: boolean };
+export type Task = { id: string; topic: string; draft: string; values: Values; confirmed: Partial<Values>; published: boolean; createdAt: string; assessment?: Assessment };
 export type Team = { id: string; name: string; interests: string; skills: string; technologies: string };
 export type Proposal = { id: string; taskId: string; teamId: string; idea: string; plan: string; deadline: string; url: string; status: 'pending' | 'selected' | 'rejected'; completed: string[] };
 export type Hub = { version: 1; tasks: Task[]; teams: Team[]; proposals: Proposal[] };
@@ -60,7 +61,7 @@ const questions: Record<Field, string> = {
   success: 'Нәтиженің сәтті екенін қандай санмен немесе өлшеммен тексересіз?',
   contact: 'Команда кіммен және қалай байланыса алады?', interaction: 'Кеңес пен кері байланыс қандай форматта, қаншалықты жиі беріледі?',
 };
-export type AIResult = { fields: Values; questions: { field: Field; text: string }[] };
+export type AIResult = { fields: Values; questions: { field: Field; text: string }[]; assessment?: Assessment };
 export function demoAnalyze(draft: string, values = emptyValues()): AIResult {
   if (!draft.trim()) throw new Error('Алдымен мәселені сипаттаңыз.');
   const result = { ...values };
@@ -78,9 +79,17 @@ export function demoAnalyze(draft: string, values = emptyValues()): AIResult {
 }
 export function parseAIResponse(raw: string): AIResult {
   const value = JSON.parse(raw);
-  if (!value || typeof value.fields !== 'object' || !Array.isArray(value.questions) || value.questions.length < 3) throw new Error('ИИ жауабының форматы жарамсыз. Мәліметтеріңіз сақталды. Қайта көріңіз.');
+  if (!value || !value.fields || typeof value.fields !== 'object' || !Array.isArray(value.questions) || value.questions.length < 3 || value.questions.length > 20) throw new Error('ИИ жауабының форматы жарамсыз. Мәліметтеріңіз сақталды. Қайта көріңіз.');
   if (!(Object.keys(fields) as Field[]).every(k => typeof value.fields[k] === 'string') || !value.questions.every((q: {field: string; text: string}) => q && Object.hasOwn(fields, q.field) && typeof q.text === 'string' && q.text.trim())) throw new Error('ИИ жауабында жарамсыз өрістер бар.');
-  return { fields: Object.fromEntries(Object.keys(fields).map(k => [k, value.fields[k]])) as Values, questions: value.questions };
+  for (const k of Object.keys(fields)) if (value.fields[k].length > (k === 'title' ? 200 : 10000)) throw new Error('AI field too long');
+  if (value.questions.some((q: {text: string}) => q.text.length > 2000)) throw new Error('AI question too long');
+  let assessment: Assessment | undefined;
+  if (value.assessment !== undefined) {
+    const a = value.assessment;
+    if (!a || !Number.isInteger(a.difficulty) || a.difficulty < 1 || a.difficulty > 10 || typeof a.feedback !== 'string' || !a.feedback.trim() || a.feedback.length > 3000) throw new Error('Invalid AI assessment');
+    assessment = { difficulty: a.difficulty, feedback: a.feedback.trim() };
+  }
+  return { fields: Object.fromEntries(Object.keys(fields).map(k => [k, value.fields[k]])) as Values, questions: value.questions.map((q: {field: Field; text: string}) => ({field: q.field, text: q.text})), ...(assessment ? { assessment } : {}) };
 }
 export async function analyze(draft: string, values: Values, provider?: (draft: string, values: Values) => Promise<string>) {
   const raw = provider ? await provider(draft, values) : JSON.stringify(demoAnalyze(draft, values));
