@@ -14,7 +14,10 @@
       <span class="brand-mark" aria-hidden="true">✳</span>
       <span>AI Sana <span class="brand-light">Challenge Hub</span></span>
     </a>
-    <a class="top-link" href="#catalog">Каталог <span aria-hidden="true">↗</span></a>
+    <nav class="top-actions" aria-label="Основная навигация">
+      <a class="top-link" href="#catalog">Каталог <span aria-hidden="true">↗</span></a>
+      <button class="sign-in-button" id="open-auth" type="button">Войти <span aria-hidden="true">↗</span></button>
+    </nav>
   </header>
 
   <main id="top">
@@ -75,5 +78,27 @@
   </main>
 
   <footer class="footer"><a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true">✳</span><span>AI Sana <span class="brand-light">Challenge Hub</span></span></a><span>Создаём будущее вместе</span><span class="footer-year">Казахстан · 2025</span></footer>
+
+  <div class="auth-overlay" id="auth-overlay" hidden>
+    <section class="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+      <button class="auth-close" id="close-auth" type="button" aria-label="Закрыть">×</button>
+      <div class="auth-brand"><span class="brand-mark" aria-hidden="true">✳</span> AI Sana</div>
+      <p class="eyebrow auth-eyebrow"><span class="eyebrow-dot"></span> ВАШЕ ПРОСТРАНСТВО</p>
+      <h2 id="auth-title">С возвращением</h2>
+      <p class="auth-intro" id="auth-intro">Войдите, чтобы следить за задачами и откликами.</p>
+      <form id="login-form" class="auth-form">
+        <label class="field registration-field" id="name-field" hidden><span>Имя и фамилия <b>*</b></span><input name="name" type="text" placeholder="Как к вам обращаться" autocomplete="name" minlength="2"></label>
+        <label class="field"><span>Электронная почта <b>*</b></span><input name="email" type="email" placeholder="name@company.kz" autocomplete="email" required></label>
+        <label class="field password-field" id="password-field"><span>Пароль <b>*</b></span><span class="password-control"><input name="password" type="password" placeholder="Введите пароль" autocomplete="current-password" required minlength="8"><button id="toggle-password" class="password-toggle" type="button" aria-label="Показать пароль">Показать</button></span></label>
+        <label class="field registration-field" id="confirm-password-field" hidden><span>Повторите пароль <b>*</b></span><input name="confirmPassword" type="password" placeholder="Введите пароль ещё раз" autocomplete="new-password" minlength="8"></label>
+        <button class="forgot-link" id="forgot-password" type="button">Забыли пароль?</button>
+        <button class="button button-primary auth-submit" type="submit" id="auth-submit">Войти <span aria-hidden="true">↗</span></button>
+        <p class="auth-message" id="auth-message" role="status" aria-live="polite"></p>
+      </form>
+      <button class="back-to-login" id="back-to-login" type="button" hidden>← Вернуться ко входу</button>
+      <p class="auth-footnote"><span id="auth-footnote-copy">Нет аккаунта?</span> <button class="auth-mode-switch" id="switch-auth-mode" type="button">Зарегистрироваться</button></p>
+      <p class="auth-storage-note">Демо-профиль хранится только в этом браузере. Для общего доступа нужен сервер авторизации.</p>
+    </section>
+  </div>
 </body>
 </html>
